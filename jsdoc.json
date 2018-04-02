@@ -8,8 +8,7 @@
         "excludePattern": "(node_modules/|docs)"
     },
     "plugins": [
-        "plugins/markdown",
-        "plugins/categories"
+        "plugins/markdown"
     ],
     "opts": {
         "template": "node_modules/minami",

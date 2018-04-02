@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Home - Documentation</title>
+    <title>avatar/getCurrentAvatar.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,25 +29,57 @@
 
 <div id="main">
     
+    <h1 class="page-title">avatar/getCurrentAvatar.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const http = require('../util/http.js').func
 
+exports.optional = ['option', 'jar']
 
+/**
+ * @name getCurrentAvatar
+ * @function
+ * @summary Gets the logged in user's avatar
+ * 
+ * @param {string} [option]
+ * @param {CookieJar} [jar]
+ * 
+ * @returns {Promise.&lt;Object, Error>} Returns an object containing information regarding the logged in user's avatar if it resolves, or an `Error`.
+ */
 
+exports.func = (args) => {
+  let jar = args.jar
+  let option = args.option
 
+  return http({
+    url: '//avatar.roblox.com/v1/avatar',
+    options: {
+      method: 'GET',
+      jar: jar,
+      followRedirect: false,
+      resolveWithFullResponse: true
+    }
+  }).then((res) => {
+    if (res.statusCode !== 200) {
+      throw new Error('You are not logged in')
+    } else {
+      let json = JSON.parse(res.body)
+      let result = (option ? json[option] : json)
 
-
-
-
-
-    
-
-
-
+      return result
+    }
+  })
+}
+</code></pre>
+        </article>
+    </section>
 
 
 

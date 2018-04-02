@@ -61,7 +61,7 @@ exports.optional = ['price', 'jar']
  * @param {number} [price.low] Highest price can be
  * @param {number} [price.high] Lowest price can be
  * @param {CookieJar} [jar] 
- * @returns {Promise.&lt;Object, Error>} A promise that returns { productId: number, price: number }
+ * @returns {Promise.&lt;Object, Error>} A promise that returns { productId: number, price: number } if it resolved or an Error if it did not.
  */
 function buy (jar, token, product, price) {
   var robux = product.PriceInRobux || 0

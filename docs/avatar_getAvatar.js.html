@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>avatar/currentlyWearing.js - Documentation</title>
+    <title>avatar/getAvatar.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">avatar/currentlyWearing.js</h1>
+    <h1 class="page-title">avatar/getAvatar.js</h1>
     
 
     
@@ -44,17 +44,13 @@
 exports.required = ['userId']
 
 /**
- * @name currentlyWearing
- * @function
- * 
- * @param {number} userId - The ID of the targetted user
- * @returns {Promise.&lt;Object, Error>} Returns an object containing the assets the user is wearing if the promise resolves, or an `Error`.
+ * Returns back an object containing data about the user's avatar
+ * @param {number} userId - The ID of the target user
+ * @returns {Promise.&lt;Object, Error>} 
  */
-exports.func = (args) => {
-  const userId = args.userId
-
+const getAvatar = (userId) => {
   return http({
-    url: '//avatar.roblox.com/v1/users/' + userId + '/currently-wearing',
+    url: '//avatar.roblox.com/v1/users/' + userId + '/avatar',
     options: {
       method: 'GET',
       resolveWithFullResponse: true
@@ -66,6 +62,11 @@ exports.func = (args) => {
       throw new Error('User does not exist')
     }
   })
+}
+
+exports.func = (args) => {
+  const userId = args.userId
+  return getAvatar(userId)
 }
 </code></pre>
         </article>

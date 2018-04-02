@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>getProductInfo.js - Documentation</title>
+    <title>uploadModel.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">getProductInfo.js</h1>
+    <h1 class="page-title">uploadModel.js</h1>
     
 
     
@@ -41,72 +41,83 @@
         <article>
             <pre class="prettyprint source linenums"><code>// Includes
 var http = require('../util/http.js').func
-var cache = require('../cache')
 
 // Args
-exports.required = ['asset']
+exports.required = ['data']
+exports.optional = ['itemOptions', 'asset', 'jar']
 
 // Define
 /**
- * Gets `info` of `asset` and caches according to settings
- * @param {number} asset - The ID of the asset you're looking to get information on. 
- * @returns {Promise.&lt;Object, Error>} Returns `info` if it resolves which is formatted as 
- * ```json 
+ * Uploads `data` to `asset` with `itemOptions`.
+ * @param {string|Stream} data 
+ * @param {Object} [itemOptions] - Required if making a _new asset_. Optional when updating an old asset.
+ * @param {string} itemOptions.name
+ * @param {string} itemOptions.description=""
+ * @param {boolean} itemOptions.copyLocked=true
+ * @param {boolean} itemOptions.allowComments=true
+ * @param {number} [itemOptions.groupId]
+ * @param {number} asset - If empty, a new asset will be created.
+ * @param {CookieJar} [jar]
+ * @return {Promise.&lt;Object, Error>} Returns an object, if it resolved, formatted as 
+ * ```js
  * {
- *  "TargetId":12999,
- *  "ProductType":"User Product",
- *  "AssetId":12999,
- *  "ProductId":17551979,
- *  "Name":"Figure1",
- *  "Description":"",
- *  "AssetTypeId":10,
- *  "Creator":{
- *    "Id":5746,
- *    "Name":"firefeind1",
- *    "CreatorType":"User",
- *    "CreatorTargetId":5746
- *  },
- *  "IconImageAssetId":0,
- *  "Created":"2006-10-15T01:59:36.373Z",
- *  "Updated":"2006-10-15T01:59:36.373Z",
- *  "PriceInRobux":null,
- *  "PriceInTickets":null,
- *  "Sales":1,
- *  "IsNew":false,
- *  "IsForSale":false,
- *  "IsPublicDomain":true,
- *  "IsLimited":false,
- *  "IsLimitedUnique":false,
- *  "Remaining":null,
- *  "MinimumMembershipLevel":0,
- *  "ContentRatingTypeId":0
+ *  AssetId: 23991283,
+ *  AssetVersionId: 2
  * }
- * ``` 
- * or an Error
+ * ```
+ * or an `Error`
+ * @example &lt;caption> If uploading a large file, it's better you pass in data as a stream. &lt;/caption>
+ * const fs = require('fs')
+ * rbx.uploadModel(fs.createReadStream('./model'), {name: 'Model'})
  */
-function getProductInfo (asset) {
+function uploadModel(jar, data, itemOptions, asset) {
   var httpOpt = {
-    url: '//api.roblox.com/marketplace/productinfo?assetId=' + asset,
+    url: '//data.roblox.com/Data/Upload.ashx?json=1&amp;assetid=' + (asset || 0),
     options: {
       resolveWithFullResponse: true,
-      method: 'GET'
+      method: 'POST',
+      jar: jar,
+      body: data,
+      headers: {
+        'Content-Type': 'application/xml'
+      }
     }
+  }
+  if (itemOptions) {
+    var copyLocked = itemOptions.copyLocked
+    var allowComments = itemOptions.allowComments
+    httpOpt.url += '&amp;type=Model&amp;genreTypeId=1&amp;name=' +
+      itemOptions.name +
+      '&amp;description=' +
+      (itemOptions.description || '') +
+      '&amp;ispublic=' +
+      (copyLocked != null ? !copyLocked : false) +
+      '&amp;allowComments=' +
+      (allowComments != null ? allowComments : true) +
+      '&amp;groupId=' +
+      (itemOptions.groupId || '')
+  } else if (!asset) {
+    throw new Error('ItemOptions is required for new assets.')
   }
   return http(httpOpt)
     .then(function (res) {
       if (res.statusCode === 200) {
-        return JSON.parse(res.body)
+        var body = res.body
+        var parsed
+        try {
+          parsed = JSON.parse(body)
+        } catch (e) {
+          throw new Error('Could not parse JSON, returned body:' + body)
+        }
+        return parsed
       } else {
-        throw new Error('Asset does not exist')
+        throw new Error('Upload failed, confirm that all item options, asset options, and upload data are valid.')
       }
     })
 }
 
 exports.func = function (args) {
-  var asset = args.asset
-  return cache.wrap('Product', asset, function () {
-    return getProductInfo(asset)
-  })
+  return uploadModel(args.jar, args.data, args.itemOptions, args.asset)
 }
 </code></pre>
         </article>

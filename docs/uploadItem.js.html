@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>uploadItem.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#buy">buy</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#configureItem">configureItem</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#getProductInfo">getProductInfo</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#uploadItem">uploadItem</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#uploadModel">uploadModel</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">uploadItem.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>// Includes
+var http = require('../util/http.js').func
+var getVerification = require('../util/getVerification.js').func
+
+// Args
+exports.required = ['name', 'assetType', 'file']
+exports.optional = ['groupId', 'jar']
+
+// Define
+/**
+ * Upload an image stored in `file` as an `assetType` with `name`.
+ * @param {string|Stream} file - The file to upload which should be passed as a stream
+ * @param {string} name - The name of the asset that will show when published
+ * @param {number} assetType - The type of asset it is. Shirts, pants, and decals are `11`, `12`, `13`, respectively.
+ * @param {number} [groupId] - If specified, it will uploaded to this group if the user has permissions.
+ * @param {CookieJar} [jar] 
+ * @returns {Promise.&lt;number, Error>} - Returns the id of the uploaded image if the promise resolves or an Error
+ * @example &lt;caption> Here is an example of uploading a shirt &lt;/caption>
+ * const fs = require('fs')
+ * noblox.uploadImage('Shirt', 11, fs.createReadStream('./Shirt.png'))
+ */
+function uploadItem(jar, file, name, assetType, groupId) {
+  return getVerification({
+    url: '//www.roblox.com/build/upload',
+    options: {
+      jar: jar
+    }
+  })
+    .then(function (ver) {
+      var data = {
+        name: name,
+        assetTypeId: assetType,
+        groupId: groupId || '',
+        __RequestVerificationToken: ver.inputs.__RequestVerificationToken,
+        file: {
+          value: file,
+          options: {
+            filename: 'Image.png',
+            contentType: 'image/png'
+          }
+        }
+      }
+      return http({
+        url: '//www.roblox.com/build/upload',
+        options: {
+          method: 'POST',
+          verification: ver.header,
+          formData: data,
+          resolveWithFullResponse: true,
+          jar: jar
+        }
+      })
+        .then(function (res) {
+          if (res.statusCode === 302) {
+            var location = res.headers.location
+            console.log(location)
+            var errMsg = location.match('message=(.*)$')
+            var match = location.match(/\d+$/)
+            if (match) {
+              var id = parseInt(match[0], 10)
+              if (location.indexOf('/build/upload') === -1) {
+                throw new Error('Unknown redirect: ' + location)
+              }
+              return id
+            } else if (errMsg) {
+              throw new Error('Upload error: ' + decodeURI(errMsg[1]))
+            } else {
+              throw new Error('Match error. Original: ' + location)
+            }
+          } else {
+            throw new Error('Unknown upload error')
+          }
+        })
+    })
+}
+
+exports.func = function (args) {
+  return uploadItem(args.jar, args.file, args.name, args.assetType, args.groupId)
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Apr 02 2018 13:52:37 GMT-0400 (EDT) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

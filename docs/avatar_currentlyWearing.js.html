@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>avatar/avatarRules.js - Documentation</title>
+    <title>avatar/currentlyWearing.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">avatar/avatarRules.js</h1>
+    <h1 class="page-title">avatar/currentlyWearing.js</h1>
     
 
     
@@ -41,33 +41,29 @@
         <article>
             <pre class="prettyprint source linenums"><code>const http = require('../util/http.js').func
 
-exports.optional = ['option']
+exports.required = ['userId']
 
 /**
- * @name avatarRules
+ * @name currentlyWearing
  * @function
  * 
- * @param {string} [option] - If supplied, returns the avatarRules that fall under the given key
- * @returns {Promise.&lt;Array|Object, Error>}
+ * @param {number} userId - The ID of the targetted user
+ * @returns {Promise.&lt;Object, Error>} Returns an object containing the assets the user is wearing if the promise resolves, or an `Error`.
  */
 exports.func = (args) => {
-  const option = args.option
+  const userId = args.userId
 
   return http({
-    url: '//avatar.roblox.com/v1/avatar-rules',
+    url: '//avatar.roblox.com/v1/users/' + userId + '/currently-wearing',
     options: {
       method: 'GET',
-      followRedirect: false,
       resolveWithFullResponse: true
     }
   }).then((res) => {
     if (res.statusCode === 200) {
-      const json = JSON.parse(res.body)
-      const result = (option ? json[option] : json)
-
-      return result
+      return JSON.parse(res.body)
     } else {
-      throw new Error('Error fetching avatar rules')
+      throw new Error('User does not exist')
     }
   })
 }
